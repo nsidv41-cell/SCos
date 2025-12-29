@@ -5,7 +5,7 @@
 #define SYSMON_H
 
 #include "window.h"
-#include "../kernel/kernel.h"
+#include "../kernel/types.h"
 #include "../kernel/memory.h"
 #include "../drivers/timer.h"
 
@@ -25,6 +25,11 @@ private:
     uint8_t mem_history[60];
     int history_index;
     
+    void update_stats();
+    void draw_graph(int x, int y, int w, int h, uint8_t* data, int count, uint8_t color);
+    void draw_bar(int x, int y, int w, int h, int percent, uint8_t color);
+    void draw_label(int x, int y, const char* text);
+
 public:
     SystemMonitor();
     virtual ~SystemMonitor();
@@ -33,12 +38,6 @@ public:
     
     virtual void draw_content() override;
     virtual void update() override;
-    
-private:
-    void update_stats();
-    void draw_graph(int x, int y, int width, int height, uint8_t* data, int count, uint8_t color);
-    void draw_bar(int x, int y, int width, int height, int percent, uint8_t color);
-    void draw_label(int x, int y, const char* text);
 };
 
 #endif // SYSMON_H
