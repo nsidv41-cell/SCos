@@ -8,19 +8,12 @@
 #include "../drivers/mouse.h"
 #include "../desktop/desktop.h"
 
-// Multiboot header (must be in first 8KB)
-extern "C" {
-    __attribute__((section(".multiboot")))
-    __attribute__((aligned(4)))
-    const unsigned int multiboot_header[] = {
-        MULTIBOOT_MAGIC,
-        MULTIBOOT_FLAGS,
-        MULTIBOOT_CHECKSUM
-    };
-}
-
-// Kernel entry point
-extern "C" void kernel_main() {
+// Kernel entry point - called from kernel_entry.asm
+extern "C" void kernel_main(uint32_t magic, uint32_t* multiboot_info) {
+    // Suppress unused parameter warnings
+    (void)magic;
+    (void)multiboot_info;
+    
     // Initialize kernel subsystems
     kernel_init();
     
@@ -60,7 +53,7 @@ void kernel_init() {
     VGA::print("[INFO] Starting desktop environment...\n\n");
     
     // Small delay for visual effect
-    for (volatile int i = 0; i < 50000000; i++);
+    for (volatile int i = 0; i < 30000000; i++);
 }
 
 void kernel_panic(const char* message) {
