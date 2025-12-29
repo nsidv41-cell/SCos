@@ -4,7 +4,7 @@
 #ifndef DESKTOP_H
 #define DESKTOP_H
 
-#include "../kernel/kernel.h"
+#include "../kernel/types.h"
 #include "../drivers/vga.h"
 #include "../drivers/keyboard.h"
 #include "../drivers/mouse.h"
