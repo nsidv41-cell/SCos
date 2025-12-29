@@ -22,7 +22,7 @@ SystemMonitor::~SystemMonitor() {
 }
 
 void SystemMonitor::init(int wx, int wy, int ww, int wh) {
-    Window::init(wx, wy, ww, wh, "System Monitor", WS_DEFAULT);
+    Window::init(wx, wy, ww, wh, "SysMon", WS_DEFAULT);
     update_stats();
 }
 
@@ -46,8 +46,7 @@ void SystemMonitor::update_stats() {
         mem_percent = (mem_used * 100) / mem_total;
     }
     
-    // Simulate CPU usage (in a real OS, this would measure actual CPU time)
-    // For demo purposes, we'll use a pseudo-random value based on timer
+    // Simulate CPU usage based on timer ticks
     uint32_t ticks = Timer::get_ticks();
     cpu_usage = ((ticks * 7) % 100);  // Pseudo-random 0-99
     
@@ -64,7 +63,6 @@ void SystemMonitor::draw_content() {
     int content_x = x + 4;
     int content_y = y + 16;
     int content_w = width - 8;
-    int content_h = height - 20;
     
     // Title area - CPU
     draw_label(content_x, content_y, "CPU");
@@ -99,23 +97,26 @@ void SystemMonitor::draw_content() {
     // Format uptime
     uint32_t hours = uptime_secs / 3600;
     uint32_t mins = (uptime_secs % 3600) / 60;
-    uint32_t secs = uptime_secs % 60;
     
     // Draw time values as colored dots (simplified display)
     int time_x = content_x + 20;
     
-    // Hours indicator
-    for (uint32_t i = 0; i < hours && i < 10; i++) {
-        VGA::fill_rect(time_x + i * 4, content_y, 3, 6, 32);
+    // Hours indicator (max 10 dots)
+    uint32_t hour_dots = hours;
+    if (hour_dots > 10) hour_dots = 10;
+    for (uint32_t i = 0; i < hour_dots; i++) {
+        VGA::fill_rect(time_x + (int)i * 4, content_y, 3, 6, 32);
     }
     
     // Separator
     VGA::put_pixel(time_x + 44, content_y + 1, 34);
     VGA::put_pixel(time_x + 44, content_y + 4, 34);
     
-    // Minutes indicator
-    for (uint32_t i = 0; i < mins / 6; i++) {
-        VGA::fill_rect(time_x + 48 + i * 4, content_y, 3, 6, 33);
+    // Minutes indicator (max 10 dots, each = 6 mins)
+    uint32_t min_dots = mins / 6;
+    if (min_dots > 10) min_dots = 10;
+    for (uint32_t i = 0; i < min_dots; i++) {
+        VGA::fill_rect(time_x + 48 + (int)i * 4, content_y, 3, 6, 33);
     }
 }
 
@@ -184,14 +185,10 @@ void SystemMonitor::draw_bar(int bx, int by, int bw, int bh, int percent, uint8_
 }
 
 void SystemMonitor::draw_label(int lx, int ly, const char* text) {
-    // Simple label drawing (just colored pixels representing text)
-    // In a full implementation, we'd use a bitmap font
-    
     int char_width = 4;
     int i = 0;
     
     while (text[i] != '\0' && i < 10) {
-        // Draw a simple representation of each character
         int cx = lx + i * char_width;
         
         switch (text[i]) {
@@ -227,8 +224,26 @@ void SystemMonitor::draw_label(int lx, int ly, const char* text) {
                 VGA::put_pixel(cx, ly + 1, 32);
                 VGA::put_pixel(cx, ly + 3, 32);
                 break;
+            case 'S':
+                VGA::draw_line(cx, ly, cx + 2, ly, 32);
+                VGA::draw_line(cx, ly, cx, ly + 2, 32);
+                VGA::draw_line(cx, ly + 2, cx + 2, ly + 2, 32);
+                VGA::draw_line(cx + 2, ly + 2, cx + 2, ly + 4, 32);
+                VGA::draw_line(cx, ly + 4, cx + 2, ly + 4, 32);
+                break;
+            case 'y':
+                VGA::draw_line(cx, ly, cx, ly + 2, 32);
+                VGA::draw_line(cx + 2, ly, cx + 2, ly + 4, 32);
+                VGA::draw_line(cx, ly + 2, cx + 2, ly + 2, 32);
+                break;
+            case 's':
+                VGA::draw_line(cx, ly, cx + 2, ly, 32);
+                VGA::draw_line(cx, ly, cx, ly + 2, 32);
+                VGA::draw_line(cx, ly + 2, cx + 2, ly + 2, 32);
+                VGA::draw_line(cx + 2, ly + 2, cx + 2, ly + 4, 32);
+                VGA::draw_line(cx, ly + 4, cx + 2, ly + 4, 32);
+                break;
             default:
-                // Draw a small rectangle for unknown characters
                 VGA::draw_rect(cx, ly, 2, 4, 34);
                 break;
         }
