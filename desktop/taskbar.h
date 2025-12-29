@@ -4,7 +4,7 @@
 #ifndef TASKBAR_H
 #define TASKBAR_H
 
-#include "../kernel/kernel.h"
+#include "../kernel/types.h"
 #include "../drivers/vga.h"
 
 #define TASKBAR_HEIGHT  20
@@ -17,6 +17,9 @@ private:
     int width, height;
     bool start_menu_open;
     
+    void draw_digit(int x, int y, int digit);
+    void draw_menu_icon(int x, int y, int icon_type);
+
 public:
     Taskbar();
     
