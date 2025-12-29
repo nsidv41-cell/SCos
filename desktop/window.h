@@ -4,7 +4,7 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include "../kernel/kernel.h"
+#include "../kernel/types.h"
 #include "../drivers/vga.h"
 #include "../drivers/keyboard.h"
 
@@ -40,7 +40,8 @@ public:
     virtual ~Window();
     
     // Initialization
-    virtual void init(int x, int y, int width, int height, const char* title = "Window", uint8_t style = WS_DEFAULT);
+    virtual void init(int x, int y, int width, int height, 
+                      const char* title = "Window", uint8_t style = WS_DEFAULT);
     
     // Drawing
     virtual void draw();
