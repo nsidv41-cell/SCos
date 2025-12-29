@@ -8,11 +8,6 @@
 #include "string.h"
 #include "io.h"
 
-// Multiboot header for GRUB compatibility
-#define MULTIBOOT_MAGIC 0x1BADB002
-#define MULTIBOOT_FLAGS 0x00000003
-#define MULTIBOOT_CHECKSUM -(MULTIBOOT_MAGIC + MULTIBOOT_FLAGS)
-
 // Standard type definitions
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
@@ -41,7 +36,7 @@ typedef uint8_t bool;
 #define SCOS_BRIGHT_GREEN  0x0F    // Bright white (will use for highlights)
 
 // Kernel functions
-extern "C" void kernel_main();
+extern "C" void kernel_main(uint32_t magic, uint32_t* multiboot_info);
 void kernel_init();
 void kernel_panic(const char* message);
 
