@@ -4,7 +4,7 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-#include "../kernel/kernel.h"
+#include "../kernel/types.h"
 #include "../kernel/io.h"
 
 // Keyboard ports
