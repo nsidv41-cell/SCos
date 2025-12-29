@@ -23,8 +23,9 @@ namespace Timer {
     // Timer tick handling
     void handle_interrupt();
     
-    // Time functions
-    uint64_t get_ticks();
+    // Time functions - using 32-bit to avoid division issues
+    uint32_t get_ticks();
+    uint32_t get_ticks_high();  // Upper 32 bits if needed
     uint32_t get_seconds();
     uint32_t get_milliseconds();
     
