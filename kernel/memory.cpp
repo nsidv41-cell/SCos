@@ -1,7 +1,6 @@
 // SCos Memory Management Implementation
 
 #include "memory.h"
-#include "string.h"
 
 // Heap configuration
 #define HEAP_START  0x200000    // 2MB - Start of heap
@@ -157,26 +156,6 @@ void* memset(void* dest, int value, size_t count) {
     uint8_t* d = (uint8_t*)dest;
     uint8_t v = (uint8_t)value;
     
-    // Optimize for aligned memory
-    while (count >= 4 && ((size_t)d & 3)) {
-        *d++ = v;
-        count--;
-    }
-    
-    // Set 4 bytes at a time
-    if (count >= 4) {
-        uint32_t v32 = v | (v << 8) | (v << 16) | (v << 24);
-        uint32_t* d32 = (uint32_t*)d;
-        
-        while (count >= 4) {
-            *d32++ = v32;
-            count -= 4;
-        }
-        
-        d = (uint8_t*)d32;
-    }
-    
-    // Set remaining bytes
     while (count--) {
         *d++ = v;
     }
@@ -188,30 +167,6 @@ void* memcpy(void* dest, const void* src, size_t count) {
     uint8_t* d = (uint8_t*)dest;
     const uint8_t* s = (const uint8_t*)src;
     
-    // Check for overlap (use memmove instead)
-    if (d == s || count == 0) return dest;
-    
-    // Optimize for aligned memory
-    while (count >= 4 && (((size_t)d | (size_t)s) & 3)) {
-        *d++ = *s++;
-        count--;
-    }
-    
-    // Copy 4 bytes at a time
-    if (count >= 4) {
-        uint32_t* d32 = (uint32_t*)d;
-        const uint32_t* s32 = (const uint32_t*)s;
-        
-        while (count >= 4) {
-            *d32++ = *s32++;
-            count -= 4;
-        }
-        
-        d = (uint8_t*)d32;
-        s = (const uint8_t*)s32;
-    }
-    
-    // Copy remaining bytes
     while (count--) {
         *d++ = *s++;
     }
@@ -225,15 +180,15 @@ void* memmove(void* dest, const void* src, size_t count) {
     
     if (d == s || count == 0) return dest;
     
-    // Check for overlap and copy accordingly
     if (d < s || d >= s + count) {
         // No overlap or dest before src, copy forward
-        return memcpy(dest, src, count);
+        while (count--) {
+            *d++ = *s++;
+        }
     } else {
         // Overlap with dest after src, copy backward
         d += count;
         s += count;
-        
         while (count--) {
             *--d = *--s;
         }
@@ -271,7 +226,10 @@ size_t get_free_memory() {
 
 } // namespace Memory
 
+// ============================================================================
 // Global new/delete operators
+// ============================================================================
+
 void* operator new(size_t size) {
     return Memory::malloc(size);
 }
@@ -280,18 +238,18 @@ void* operator new[](size_t size) {
     return Memory::malloc(size);
 }
 
-void operator delete(void* ptr) {
+void operator delete(void* ptr) noexcept {
     Memory::free(ptr);
 }
 
-void operator delete[](void* ptr) {
+void operator delete[](void* ptr) noexcept {
     Memory::free(ptr);
 }
 
-void operator delete(void* ptr, size_t) {
+void operator delete(void* ptr, size_t) noexcept {
     Memory::free(ptr);
 }
 
-void operator delete[](void* ptr, size_t) {
+void operator delete[](void* ptr, size_t) noexcept {
     Memory::free(ptr);
 }
