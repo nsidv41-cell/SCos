@@ -11,8 +11,8 @@
 // Kernel entry point - called from kernel_entry.asm
 extern "C" void kernel_main(uint32_t magic, uint32_t* multiboot_info) {
     // Suppress unused parameter warnings
-    (void)magic;
-    (void)multiboot_info;
+    UNUSED(magic);
+    UNUSED(multiboot_info);
     
     // Initialize kernel subsystems
     kernel_init();
