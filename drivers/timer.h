@@ -4,7 +4,7 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-#include "../kernel/kernel.h"
+#include "../kernel/types.h"
 #include "../kernel/io.h"
 
 // PIT ports
