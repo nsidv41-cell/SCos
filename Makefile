@@ -26,7 +26,7 @@ BOOTLOADER = $(BUILD_DIR)/bootloader.bin
 KERNEL = $(BUILD_DIR)/kernel.bin
 ISO = scos.iso
 
-# Compiler flags - note: removed -Werror to allow warnings
+# Compiler flags
 CFLAGS = -m32 -ffreestanding -fno-pie -fno-stack-protector -nostdlib -nostdinc \
          -fno-builtin -Wall -Wextra -O2 -c
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti -Wno-unused-variable -Wno-unused-parameter
@@ -93,9 +93,11 @@ $(KERNEL): $(ALL_OBJ) linker.ld
 
 # Create bootable ISO
 iso: all
-	@echo "[ISO] Creating bootable ISO..."
+	@echo "[ISO] Preparing ISO structure..."
+	@mkdir -p $(ISO_DIR)/boot/grub
 	@cp $(BOOTLOADER) $(ISO_DIR)/boot/bootloader.bin
 	@cp $(KERNEL) $(ISO_DIR)/boot/kernel.bin
+	@echo "[ISO] Creating GRUB config..."
 	@echo 'set timeout=0' > $(ISO_DIR)/boot/grub/grub.cfg
 	@echo 'set default=0' >> $(ISO_DIR)/boot/grub/grub.cfg
 	@echo '' >> $(ISO_DIR)/boot/grub/grub.cfg
@@ -103,17 +105,50 @@ iso: all
 	@echo '    multiboot /boot/kernel.bin' >> $(ISO_DIR)/boot/grub/grub.cfg
 	@echo '    boot' >> $(ISO_DIR)/boot/grub/grub.cfg
 	@echo '}' >> $(ISO_DIR)/boot/grub/grub.cfg
-	@grub-mkrescue -o $(ISO) $(ISO_DIR) 2>/dev/null || \
-		xorriso -as mkisofs -R -J -c boot/boot.catalog \
-		-b boot/bootloader.bin -no-emul-boot -boot-load-size 4 \
-		-boot-info-table -o $(ISO) $(ISO_DIR) 2>/dev/null || \
-		echo "[WARN] ISO creation requires grub-mkrescue or xorriso"
-	@test -f $(ISO) && echo "[OK] ISO created: $(ISO)" || echo "[ERROR] ISO creation failed"
+	@echo "[ISO] Generating ISO image..."
+	@if command -v grub-mkrescue >/dev/null 2>&1; then \
+		echo "[ISO] Using grub-mkrescue..."; \
+		grub-mkrescue -o $(ISO) $(ISO_DIR) 2>&1 || echo "[WARN] grub-mkrescue failed"; \
+	fi
+	@if [ ! -f $(ISO) ] && command -v xorriso >/dev/null 2>&1; then \
+		echo "[ISO] Using xorriso fallback..."; \
+		xorriso -as mkisofs \
+			-R -J \
+			-b boot/bootloader.bin \
+			-no-emul-boot \
+			-boot-load-size 4 \
+			-boot-info-table \
+			-o $(ISO) $(ISO_DIR) 2>&1 || echo "[WARN] xorriso failed"; \
+	fi
+	@if [ ! -f $(ISO) ]; then \
+		echo "[ISO] Creating simple boot image..."; \
+		$(MAKE) simple-iso; \
+	fi
+	@if [ -f $(ISO) ]; then \
+		echo "[OK] ISO created: $(ISO) ($$(du -h $(ISO) | cut -f1))"; \
+	else \
+		echo "[ERROR] Failed to create ISO"; \
+		exit 1; \
+	fi
+
+# Simple ISO creation without GRUB (uses our bootloader directly)
+simple-iso: all
+	@echo "[ISO] Creating simple bootable image..."
+	@# Create a raw disk image with bootloader + kernel
+	@dd if=/dev/zero of=$(ISO) bs=512 count=2880 2>/dev/null
+	@dd if=$(BOOTLOADER) of=$(ISO) bs=512 count=1 conv=notrunc 2>/dev/null
+	@dd if=$(KERNEL) of=$(ISO) bs=512 seek=1 conv=notrunc 2>/dev/null
+	@echo "[OK] Simple boot image created: $(ISO)"
 
 # Run in QEMU
 run: iso
 	@echo "[RUN] Starting QEMU..."
 	qemu-system-i386 -cdrom $(ISO) -m 256M -vga std
+
+# Run simple image (floppy mode)
+run-simple: simple-iso
+	@echo "[RUN] Starting QEMU with floppy image..."
+	qemu-system-i386 -fda $(ISO) -m 256M -vga std
 
 # Debug with QEMU
 debug: iso
@@ -131,9 +166,11 @@ help:
 	@echo "SCos Build System"
 	@echo ""
 	@echo "Targets:"
-	@echo "  all     - Build bootloader and kernel"
-	@echo "  iso     - Create bootable ISO image"
-	@echo "  run     - Build and run in QEMU"
-	@echo "  clean   - Remove build artifacts"
-	@echo "  debug   - Run with GDB debugging"
-	@echo "  help    - Show this message"
+	@echo "  all        - Build bootloader and kernel"
+	@echo "  iso        - Create bootable ISO image (tries GRUB, then xorriso)"
+	@echo "  simple-iso - Create simple bootable floppy image"
+	@echo "  run        - Build and run in QEMU (CD-ROM mode)"
+	@echo "  run-simple - Build and run in QEMU (floppy mode)"
+	@echo "  clean      - Remove build artifacts"
+	@echo "  debug      - Run with GDB debugging"
+	@echo "  help       - Show this message" 
