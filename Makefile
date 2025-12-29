@@ -26,10 +26,10 @@ BOOTLOADER = $(BUILD_DIR)/bootloader.bin
 KERNEL = $(BUILD_DIR)/kernel.bin
 ISO = scos.iso
 
-# Compiler flags
+# Compiler flags - note: removed -Werror to allow warnings
 CFLAGS = -m32 -ffreestanding -fno-pie -fno-stack-protector -nostdlib -nostdinc \
          -fno-builtin -Wall -Wextra -O2 -c
-CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
+CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti -Wno-unused-variable -Wno-unused-parameter
 LDFLAGS = -m elf_i386 -T linker.ld -nostdlib
 ASMFLAGS = -f elf32
 
@@ -50,7 +50,7 @@ DESKTOP_OBJ = $(patsubst $(DESKTOP_DIR)/%.cpp,$(BUILD_DIR)/desktop_%.o,$(DESKTOP
 ALL_OBJ = $(KERNEL_ENTRY_OBJ) $(KERNEL_CPP_OBJ) $(DRIVER_OBJ) $(DESKTOP_OBJ)
 
 # Phony targets
-.PHONY: all clean iso run directories debug
+.PHONY: all clean iso run directories debug help
 
 # Default target
 all: directories $(BOOTLOADER) $(KERNEL)
@@ -108,7 +108,7 @@ iso: all
 		-b boot/bootloader.bin -no-emul-boot -boot-load-size 4 \
 		-boot-info-table -o $(ISO) $(ISO_DIR) 2>/dev/null || \
 		echo "[WARN] ISO creation requires grub-mkrescue or xorriso"
-	@echo "[OK] ISO created: $(ISO)"
+	@test -f $(ISO) && echo "[OK] ISO created: $(ISO)" || echo "[ERROR] ISO creation failed"
 
 # Run in QEMU
 run: iso
