@@ -4,7 +4,7 @@
 #ifndef IO_H
 #define IO_H
 
-#include "kernel.h"
+#include "types.h"
 
 namespace IO {
     // Output a byte to a port
