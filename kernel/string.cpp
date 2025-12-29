@@ -34,7 +34,7 @@ int strcmp(const char* s1, const char* s2) {
         s1++;
         s2++;
     }
-    return *(unsigned char*)s1 - *(unsigned char*)s2;
+    return *(const uint8_t*)s1 - *(const uint8_t*)s2;
 }
 
 int strncmp(const char* s1, const char* s2, size_t n) {
@@ -44,7 +44,7 @@ int strncmp(const char* s1, const char* s2, size_t n) {
         n--;
     }
     if (n == 0) return 0;
-    return *(unsigned char*)s1 - *(unsigned char*)s2;
+    return *(const uint8_t*)s1 - *(const uint8_t*)s2;
 }
 
 char* strcat(char* dest, const char* src) {
@@ -96,7 +96,7 @@ char* itoa(int value, char* str, int base) {
     return str;
 }
 
-char* utoa(unsigned int value, char* str, int base) {
+char* utoa(uint32_t value, char* str, int base) {
     int i = 0;
     
     if (value == 0) {
@@ -106,7 +106,7 @@ char* utoa(unsigned int value, char* str, int base) {
     }
     
     while (value != 0) {
-        unsigned int rem = value % base;
+        uint32_t rem = value % base;
         str[i++] = (rem > 9) ? (rem - 10) + 'A' : rem + '0';
         value = value / base;
     }
