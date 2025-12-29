@@ -4,7 +4,7 @@
 #ifndef MOUSE_H
 #define MOUSE_H
 
-#include "../kernel/kernel.h"
+#include "../kernel/types.h"
 #include "../kernel/io.h"
 
 // Mouse buttons
