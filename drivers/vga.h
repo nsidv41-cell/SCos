@@ -4,7 +4,7 @@
 #ifndef VGA_H
 #define VGA_H
 
-#include "../kernel/kernel.h"
+#include "../kernel/types.h"
 #include "../kernel/io.h"
 
 // VGA ports
@@ -53,7 +53,7 @@ namespace VGA {
     void clear_screen();
     void set_color(uint8_t color);
     void set_cursor(int x, int y);
-    void enable_cursor(uint8_t start, uint8_t end);
+    void enable_cursor(uint8_t cursor_start, uint8_t cursor_end);
     void disable_cursor();
     
     // Text output
@@ -61,7 +61,6 @@ namespace VGA {
     void print(const char* str);
     void print_int(int value);
     void print_hex(uint32_t value);
-    void printf(const char* format, ...);
     
     // Graphics mode functions
     void set_graphics_mode();
