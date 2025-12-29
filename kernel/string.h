@@ -4,7 +4,7 @@
 #ifndef STRING_H
 #define STRING_H
 
-#include "kernel.h"
+#include "types.h"
 
 namespace String {
     // String length
@@ -23,7 +23,7 @@ namespace String {
     
     // Integer to string
     char* itoa(int value, char* str, int base);
-    char* utoa(unsigned int value, char* str, int base);
+    char* utoa(uint32_t value, char* str, int base);
     
     // Reverse string
     void reverse(char* str, int length);
