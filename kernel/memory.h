@@ -4,7 +4,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include "kernel.h"
+#include "types.h"
 
 // Memory block header for allocation tracking
 struct MemoryBlock {
@@ -36,12 +36,15 @@ namespace Memory {
     size_t get_free_memory();
 }
 
-// Global new/delete operators
+// ============================================================================
+// Global new/delete operators for C++
+// ============================================================================
+
 void* operator new(size_t size);
 void* operator new[](size_t size);
-void operator delete(void* ptr);
-void operator delete[](void* ptr);
-void operator delete(void* ptr, size_t size);
-void operator delete[](void* ptr, size_t size);
+void operator delete(void* ptr) noexcept;
+void operator delete[](void* ptr) noexcept;
+void operator delete(void* ptr, size_t size) noexcept;
+void operator delete[](void* ptr, size_t size) noexcept;
 
 #endif // MEMORY_H
