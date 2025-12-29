@@ -14,9 +14,6 @@ static Window* focused_window = nullptr;
 // Cursor state
 static int cursor_x = 160;
 static int cursor_y = 100;
-static int last_cursor_x = 160;
-static int last_cursor_y = 100;
-static uint8_t cursor_backup[64];
 
 // Cursor bitmap (8x8)
 static const uint8_t cursor_bitmap[8] = {
@@ -133,7 +130,6 @@ void draw_background() {
     }
     
     // Draw "SCos" logo in top-left
-    // Simple pixel art logo
     int logo_x = 5;
     int logo_y = 5;
     
@@ -174,7 +170,6 @@ void draw_cursor() {
                 int px = cursor_x + cx;
                 int py = cursor_y + cy;
                 if (px >= 0 && px < GFX_WIDTH && py >= 0 && py < GFX_HEIGHT) {
-                    // Draw white outline
                     VGA::put_pixel(px, py, 47);  // White
                 }
             }
@@ -201,9 +196,9 @@ void draw_clock() {
     uint32_t mins = secs / 60;
     uint32_t hours = mins / 60;
     
-    secs %= 60;
-    mins %= 60;
-    hours %= 24;
+    UNUSED(secs);  // We only display hours:mins
+    mins = mins % 60;
+    hours = hours % 24;
     
     // Simple digital clock display
     int clock_x = GFX_WIDTH - 45;
@@ -213,8 +208,8 @@ void draw_clock() {
     VGA::fill_rect(clock_x - 2, clock_y - 1, 44, 10, 1);
     VGA::draw_rect(clock_x - 2, clock_y - 1, 44, 10, DESKTOP_ACCENT);
     
-    // Draw time digits (very simple, just colored rectangles for now)
-    // In a full implementation, we'd draw actual digit bitmaps
+    UNUSED(hours);
+    UNUSED(mins);
 }
 
 void handle_mouse() {
