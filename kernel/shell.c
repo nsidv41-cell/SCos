@@ -373,4 +373,152 @@ void shell_run(void) {
         else if (c == '\b' || c == 127) {
             if (cursor_pos > 0) {
                 /* Remove character before cursor */
-                memmove(cmdline + cursor_pos - 1, cmdline + cursor
+                memmove(cmdline + cursor_pos - 1, cmdline + cursor_pos, 
+                        cmdline_pos - cursor_pos + 1);
+                cursor_pos--;
+                cmdline_pos--;
+                redraw_cmdline();
+            }
+        }
+        else if (c == '\x7F') {  /* Delete key */
+            if (cursor_pos < cmdline_pos) {
+                memmove(cmdline + cursor_pos, cmdline + cursor_pos + 1,
+                        cmdline_pos - cursor_pos);
+                cmdline_pos--;
+                redraw_cmdline();
+            }
+        }
+        else if (c == '\t') {
+            /* Tab completion */
+            if (cmdline_pos > 0) {
+                /* Find the word being completed */
+                int word_start = cursor_pos;
+                while (word_start > 0 && cmdline[word_start - 1] != ' ') {
+                    word_start--;
+                }
+                
+                char prefix[CMD_MAX_LENGTH];
+                int prefix_len = cursor_pos - word_start;
+                strncpy(prefix, cmdline + word_start, prefix_len);
+                prefix[prefix_len] = '\0';
+                
+                /* First try command completion if at start */
+                if (word_start == 0) {
+                    for (int i = 0; commands[i].name != NULL; i++) {
+                        if (strncmp(commands[i].name, prefix, prefix_len) == 0) {
+                            /* Found match - complete it */
+                            const char *rest = commands[i].name + prefix_len;
+                            int rest_len = strlen(rest);
+                            
+                            if (cmdline_pos + rest_len < CMD_MAX_LENGTH - 1) {
+                                memmove(cmdline + cursor_pos + rest_len,
+                                        cmdline + cursor_pos,
+                                        cmdline_pos - cursor_pos + 1);
+                                memcpy(cmdline + cursor_pos, rest, rest_len);
+                                cmdline_pos += rest_len;
+                                cursor_pos += rest_len;
+                                redraw_cmdline();
+                            }
+                            break;
+                        }
+                    }
+                } else {
+                    /* Try file completion */
+                    char path[FS_MAX_PATH];
+                    char dir[FS_MAX_PATH];
+                    char file_prefix[FS_MAX_NAME];
+                    
+                    /* Parse the path */
+                    if (strchr(prefix, '/')) {
+                        fs_get_parent_path(prefix, dir);
+                        fs_get_basename(prefix, file_prefix);
+                    } else {
+                        strcpy(dir, fs_getcwd());
+                        strcpy(file_prefix, prefix);
+                    }
+                    
+                    /* List directory and find matches */
+                    char listing[4096];
+                    if (fs_list(dir, listing, sizeof(listing)) >= 0) {
+                        char *line = strtok(listing, "\n");
+                        while (line) {
+                            if (strncmp(line, file_prefix, strlen(file_prefix)) == 0) {
+                                /* Found match */
+                                const char *rest = line + strlen(file_prefix);
+                                int rest_len = strlen(rest);
+                                
+                                if (cmdline_pos + rest_len < CMD_MAX_LENGTH - 1) {
+                                    memmove(cmdline + cursor_pos + rest_len,
+                                            cmdline + cursor_pos,
+                                            cmdline_pos - cursor_pos + 1);
+                                    memcpy(cmdline + cursor_pos, rest, rest_len);
+                                    cmdline_pos += rest_len;
+                                    cursor_pos += rest_len;
+                                    redraw_cmdline();
+                                }
+                                break;
+                            }
+                            line = strtok(NULL, "\n");
+                        }
+                    }
+                }
+            }
+        }
+        else if (c == 3) {  /* Ctrl+C */
+            vga_puts("^C\n");
+            cmdline[0] = '\0';
+            cmdline_pos = 0;
+            cursor_pos = 0;
+            shell_print_prompt();
+        }
+        else if (c == 4) {  /* Ctrl+D */
+            if (cmdline_pos == 0) {
+                vga_puts("logout\n");
+                /* In a real system, this would exit the shell */
+            }
+        }
+        else if (c == 12) {  /* Ctrl+L - clear screen */
+            vga_clear();
+            shell_print_prompt();
+            vga_puts(cmdline);
+        }
+        else if (c == 21) {  /* Ctrl+U - clear line */
+            cmdline[0] = '\0';
+            cmdline_pos = 0;
+            cursor_pos = 0;
+            redraw_cmdline();
+        }
+        else if (c == 23) {  /* Ctrl+W - delete word */
+            if (cursor_pos > 0) {
+                int word_start = cursor_pos;
+                while (word_start > 0 && cmdline[word_start - 1] == ' ') {
+                    word_start--;
+                }
+                while (word_start > 0 && cmdline[word_start - 1] != ' ') {
+                    word_start--;
+                }
+                
+                memmove(cmdline + word_start, cmdline + cursor_pos,
+                        cmdline_pos - cursor_pos + 1);
+                cmdline_pos -= (cursor_pos - word_start);
+                cursor_pos = word_start;
+                redraw_cmdline();
+            }
+        }
+        else if (c >= ' ' && c <= '~') {
+            /* Printable character */
+            if (cmdline_pos < CMD_MAX_LENGTH - 1) {
+                if (cursor_pos < cmdline_pos) {
+                    /* Insert in middle */
+                    memmove(cmdline + cursor_pos + 1, cmdline + cursor_pos,
+                            cmdline_pos - cursor_pos + 1);
+                }
+                cmdline[cursor_pos] = c;
+                cmdline_pos++;
+                cursor_pos++;
+                cmdline[cmdline_pos] = '\0';
+                redraw_cmdline();
+            }
+        }
+    }
+}
